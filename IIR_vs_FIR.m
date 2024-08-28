@@ -3,6 +3,9 @@ clear all;
 close all;
 clc;
 
+% Load FIR coefficients from FIR.mat
+load('FIR.mat'); % Assuming 'Num_low' and 'Num_high' are the variable names in the .mat file
+
 % Sampling frequency
 fs = 10000; 
 
@@ -15,38 +18,28 @@ order = 8; % Filter order
 
 % FIR Filter Design
 % FIR with the same number of coefficients as IIR (order+1 coefficients)
-fir_same_coeffs = fir1(order, fc/(fs/2), 'low');
+fir_same_coeffs = Num_low;
 
-% FIR with a similar response
-order_fir_similar = 64; % Higher order for a more similar response
-fir_similar_response = fir1(order_fir_similar, fc/(fs/2), 'low');
+% FIR with a similar response (imported from FIR.mat)
+fir_similar_response = Num_high;
 
-% Frequency response
-[h_iir, w_iir] = freqz(b_iir, a_iir, 1024, fs);
-[h_fir_same, w_fir_same] = freqz(fir_same_coeffs, 1, 1024, fs);
-[h_fir_similar, w_fir_similar] = freqz(fir_similar_response, 1, 1024, fs);
-
-% Plotting frequency responses
+% Plotting IIR Filter frequency response
 figure('Position', [100, 100, 1200, 900]);
-
-subplot(2, 1, 1);
-plot(w_iir, 20*log10(abs(h_iir)), 'b', 'LineWidth', 2); hold on;
-plot(w_fir_same, 20*log10(abs(h_fir_same)), 'r--', 'LineWidth', 2);
-title('Frequency Response: IIR vs. FIR with Same Coefficients');
-xlabel('Frequency (Hz)');
-ylabel('Magnitude (dB)');
-legend('IIR Filter', 'FIR Filter (Same Coefficients)');
+freqz(b_iir, a_iir, 1024, fs);
+set(subplot(2,1,1), 'XLim',[0 500]);
+set(subplot(2,1,2), 'XLim',[0 500]);
 grid on;
-xlim([0, 500]);
 
-subplot(2, 1, 2);
-plot(w_iir, 20*log10(abs(h_iir)), 'b', 'LineWidth', 2); hold on;
-plot(w_fir_similar, 20*log10(abs(h_fir_similar)), 'g--', 'LineWidth', 2);
-title('Frequency Response: IIR vs. FIR with Similar Response');
-xlabel('Frequency (Hz)');
-ylabel('Magnitude (dB)');
-legend('IIR Filter', 'FIR Filter (Similar Response)');
+% Plotting FIR Filter with the same number of coefficients as IIR
+figure('Position', [100, 100, 1200, 900]);
+freqz(fir_same_coeffs, 1, 1024, fs);
+set(subplot(2,1,1), 'XLim',[0 500]);
+set(subplot(2,1,2), 'XLim',[0 500]);
 grid on;
-xlim([0, 500]);
 
-sgtitle('Comparison of IIR and FIR Filters');
+% Plotting FIR Filter with similar response to IIR
+figure('Position', [100, 100, 1200, 900]);
+freqz(fir_similar_response, 1, 1024, fs);
+set(subplot(2,1,1), 'XLim',[0 500]);
+set(subplot(2,1,2), 'XLim',[0 500]);
+grid on;
