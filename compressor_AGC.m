@@ -1,27 +1,34 @@
-function y_comp = compressor_AGC(x, threshold, ratio, fs, attack_time, release_time)
-    % Compressor with attack and release times for Simulink
+function y = compressor_AGC(u, threshold_dB, ratio, fs, attack_time, release_time)
+    % Compressor with Attack and Release
+    % u: input signal
+    % y: compressed output signal
 
-    % Convert attack and release times to sample counts
-    attack_samples = round(attack_time * fs);
-    release_samples = round(release_time * fs);
+    % Convert threshold to linear scale
+    threshold = 10^(threshold_dB / 20);
 
-    % Initialize output
-    y_comp = zeros(size(x));
-    gain = 1;  % Initial gain
-
-    % Process signal sample by sample
-    for n = 1:length(x)
-        % Compute current gain based on input level
-        x_db = 20*log10(abs(x(n)) + eps); % Convert to dB, add eps to avoid log(0)
-        if x_db > threshold
-            target_gain = 10^((compressor_transfer(x_db, threshold, ratio) - x_db)/20);
-            % Attack phase
-            gain = gain + (target_gain - gain) / attack_samples;
-        else
-            % Release phase
-            gain = gain - (gain - 1) / release_samples;
-        end
-        % Apply gain to the signal
-        y_comp(n) = x(n) * gain;
+    % Initialize persistent variables
+    persistent level;
+    if isempty(level)
+        level = 0;
     end
+
+    % Compute the envelope of the input signal
+    abs_u = abs(u);
+    if abs_u > level
+        % Attack phase
+        level = (1 - exp(-1 / (fs * attack_time))) * abs_u + exp(-1 / (fs * attack_time)) * level;
+    else
+        % Release phase
+        level = (1 - exp(-1 / (fs * release_time))) * abs_u + exp(-1 / (fs * release_time)) * level;
+    end
+
+    % Apply compression
+    if level > threshold
+        gain = threshold + (level - threshold) / ratio;
+    else
+        gain = level;
+    end
+
+    % Apply the computed gain to the input signal
+    y = (gain / level) * u;
 end

@@ -1,0 +1,39 @@
+function y = compressor_AGC(u, comp_threshold, comp_ratio, fs, attack_time, release_time)
+    % Compressor with Attack and Release
+    % u: input signal
+    % y: compressed output signal
+x1, comp_threshold, comp_ratio, fs, attack_time, release_time
+    % Parameters (adjust these to match your compressor design)
+    threshold = -10;  % Threshold in dB
+    threshold = 10^(threshold_dB / 20);  % Convert dB to linear scale
+    comp_ratio = 2;  % Compression ratio
+    attack_Time = 0.1;  % Attack time in seconds
+    release_Time = 0.2;  % Release time in seconds
+    fs = 1000;  % Sampling frequency (Hz)
+
+    % Initialize persistent variables
+    persistent level;
+    if isempty(level)
+        level = 0;
+    end
+
+    % Compute the envelope of the input signal
+    abs_u = abs(u);
+    if abs_u > level
+        % Attack phase
+        level = (1 - exp(-1 / (fs * attack_Time))) * abs_u + exp(-1 / (fs * attack_Time)) * level;
+    else
+        % Release phase
+        level = (1 - exp(-1 / (fs * release_Time))) * abs_u + exp(-1 / (fs * release_Time)) * level;
+    end
+
+    % Apply compression
+    if level > threshold
+        gain = threshold + (level - threshold) / comp_ratio;
+    else
+        gain = level;
+    end
+
+    % Apply the computed gain to the input signal
+    y = (gain / level) * u;
+end

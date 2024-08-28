@@ -1,0 +1,52 @@
+% Clear workspace and close all figures
+clear all;
+close all;
+clc;
+
+% Sampling frequency
+fs = 10000; 
+
+% IIR Filter Design (Butterworth)
+fc = 80; % Cutoff frequency
+order = 8; % Filter order
+
+% IIR low-pass filter
+[b_iir, a_iir] = butter(order, fc/(fs/2), 'low');
+
+% FIR Filter Design
+% FIR with the same number of coefficients as IIR (order+1 coefficients)
+fir_same_coeffs = fir1(order, fc/(fs/2), 'low');
+
+% FIR with a similar response
+order_fir_similar = 64; % Higher order for a more similar response
+fir_similar_response = fir1(order_fir_similar, fc/(fs/2), 'low');
+
+% Frequency response
+[h_iir, w_iir] = freqz(b_iir, a_iir, 1024, fs);
+[h_fir_same, w_fir_same] = freqz(fir_same_coeffs, 1, 1024, fs);
+[h_fir_similar, w_fir_similar] = freqz(fir_similar_response, 1, 1024, fs);
+
+% Plotting frequency responses
+figure('Position', [100, 100, 1200, 900]);
+
+subplot(2, 1, 1);
+plot(w_iir, 20*log10(abs(h_iir)), 'b', 'LineWidth', 2); hold on;
+plot(w_fir_same, 20*log10(abs(h_fir_same)), 'r--', 'LineWidth', 2);
+title('Frequency Response: IIR vs. FIR with Same Coefficients');
+xlabel('Frequency (Hz)');
+ylabel('Magnitude (dB)');
+legend('IIR Filter', 'FIR Filter (Same Coefficients)');
+grid on;
+xlim([0, 500]);
+
+subplot(2, 1, 2);
+plot(w_iir, 20*log10(abs(h_iir)), 'b', 'LineWidth', 2); hold on;
+plot(w_fir_similar, 20*log10(abs(h_fir_similar)), 'g--', 'LineWidth', 2);
+title('Frequency Response: IIR vs. FIR with Similar Response');
+xlabel('Frequency (Hz)');
+ylabel('Magnitude (dB)');
+legend('IIR Filter', 'FIR Filter (Similar Response)');
+grid on;
+xlim([0, 500]);
+
+sgtitle('Comparison of IIR and FIR Filters');
